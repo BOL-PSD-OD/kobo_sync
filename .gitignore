@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# never commit a service-account key or any credentials (they belong in GitHub Secrets)
+*service*account*.json
+*credentials*.json
+*-key.json
+sa.json

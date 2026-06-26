@@ -1,0 +1,24 @@
+name: Kobo sync
+on:
+  schedule:
+    - cron: "0 * * * *"        # hourly to start; change to "*/30 * * * *" for every 30 min
+  workflow_dispatch:           # manual run button (Actions tab)
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r kobo_sync/requirements.txt
+      - run: python -m kobo_sync.run
+        env:
+          KOBO_TOKEN:         ${{ secrets.KOBO_TOKEN }}
+          KOBO_ASSET_UID:     ${{ secrets.KOBO_ASSET_UID }}
+          KOBO_SERVER:        ${{ vars.KOBO_SERVER || 'https://kf.kobotoolbox.org' }}
+          SHEET_ID:           ${{ secrets.SHEET_ID }}
+          DRIVE_FOLDER_ID:    ${{ secrets.DRIVE_FOLDER_ID }}
+          GOOGLE_SA_JSON:     ${{ secrets.GOOGLE_SA_JSON }}
+          ARCHIVE_MODE:       ${{ vars.ARCHIVE_MODE || 'off' }}
+          ARCHIVE_AFTER_DAYS: ${{ vars.ARCHIVE_AFTER_DAYS || '30' }}
