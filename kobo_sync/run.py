@@ -80,7 +80,7 @@ def main(argv=None):
         # sheets
         sheets.upsert(sheets._ws(sh, "master", MASTER_HEADER), MASTER_HEADER, _master_rows(items), "uuid")
         sheets.upsert(sheets._ws(sh, "_raw", RAW_HEADER), RAW_HEADER, _raw_rows(items), "uuid")
-        sheets._ws(sh, "_form", ["form_json"]).update([[json.dumps(form, ensure_ascii=False)]], "2:2")
+        sheets.write_form(sh, json.dumps(form, ensure_ascii=False))
         # archive (guarded; off by default)
         chosen = []
         if mode in ("dry_run", "delete"):

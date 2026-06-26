@@ -75,3 +75,18 @@ def append_media(sh, new_rows):
     ws = _ws(sh, "_media", ["uuid", "field", "store_id", "file_id", "url"])
     if new_rows:
         ws.append_rows(new_rows, value_input_option="RAW")
+
+
+def write_form(sh, form_json, chunk=45000):
+    """Store the (possibly huge) form JSON as TEXT chunks down column A of '_form'.
+    Google Sheets caps a single cell at 50000 chars; the form (with all choices)
+    exceeds that, so we split it. Readers join the column-A chunks back together.
+    RAW input keeps each chunk a literal string (no number coercion)."""
+    import gspread
+    try:
+        ws = sh.worksheet("_form")
+        ws.clear()
+    except gspread.WorksheetNotFound:
+        ws = sh.add_worksheet(title="_form", rows=100, cols=1)
+    pieces = [form_json[i:i + chunk] for i in range(0, len(form_json), chunk)] or [""]
+    ws.update([["form_json"]] + [[p] for p in pieces], "A1", value_input_option="RAW")
