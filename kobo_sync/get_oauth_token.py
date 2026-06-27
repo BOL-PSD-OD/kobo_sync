@@ -29,13 +29,15 @@ def main(argv):
     flow = InstalledAppFlow.from_client_secrets_file(secret, SCOPES)
     # access_type=offline + prompt=consent guarantees a refresh_token is returned.
     creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
-    print("\n=== COPY THESE INTO GITHUB SECRETS (repo kobo_sync) ===")
-    print("GOOGLE_OAUTH_CLIENT_ID     =", creds.client_id)
-    print("GOOGLE_OAUTH_CLIENT_SECRET =", creds.client_secret)
-    print("GOOGLE_OAUTH_REFRESH_TOKEN =", creds.refresh_token)
+    out = "oauth_secrets.local.txt"
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(f"GOOGLE_OAUTH_CLIENT_ID={creds.client_id}\n")
+        f.write(f"GOOGLE_OAUTH_CLIENT_SECRET={creds.client_secret}\n")
+        f.write(f"GOOGLE_OAUTH_REFRESH_TOKEN={creds.refresh_token}\n")
+    print(f"\nSaved 3 values to {out}  (refresh_token present: {bool(creds.refresh_token)})")
+    print("Open that file, paste the 3 values into GitHub Secrets, then DELETE it.")
     if not creds.refresh_token:
-        print("\nWARNING: no refresh_token returned. Revoke prior access at "
-              "myaccount.google.com/permissions and re-run.")
+        print("WARNING: no refresh_token. Revoke at myaccount.google.com/permissions and re-run.")
     return 0
 
 
