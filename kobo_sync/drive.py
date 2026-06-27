@@ -1,6 +1,7 @@
 """Upload Kobo photos to Drive (one folder per Store ID); skip already-uploaded."""
 import io
 import json
+import os
 import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
@@ -14,7 +15,24 @@ BUDGET_SECONDS = 270.0   # stop starting new uploads after ~4.5 min per run
 
 
 def drive_client(sa_json):
-    creds = Credentials.from_service_account_info(json.loads(sa_json), scopes=SCOPES)
+    """Build a Drive client. A service account has NO storage quota and cannot
+    own uploaded files in a personal My Drive (403 storageQuotaExceeded), so if
+    OAuth user credentials are configured we upload as that user (their 15GB
+    quota); otherwise fall back to the service account (works only on a Shared
+    Drive). Sheets I/O stays on the service account elsewhere."""
+    client_id = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
+    if client_id:
+        from google.oauth2.credentials import Credentials as UserCredentials
+        creds = UserCredentials(
+            None,
+            refresh_token=os.environ["GOOGLE_OAUTH_REFRESH_TOKEN"],
+            client_id=client_id,
+            client_secret=os.environ["GOOGLE_OAUTH_CLIENT_SECRET"],
+            token_uri="https://oauth2.googleapis.com/token",
+            scopes=SCOPES,
+        )
+    else:
+        creds = Credentials.from_service_account_info(json.loads(sa_json), scopes=SCOPES)
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 

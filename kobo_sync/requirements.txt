@@ -2,4 +2,5 @@ requests>=2.31
 gspread>=6.0
 google-auth>=2.30
 google-api-python-client>=2.130
+google-auth-oauthlib>=1.2     # local get_oauth_token.py helper (Drive upload as user)
 pytest>=8.0
