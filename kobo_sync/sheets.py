@@ -1,5 +1,12 @@
-"""Google Sheets I/O via a service account: read prior IDs, upsert tabs."""
+"""Google Sheets I/O: read prior IDs, upsert tabs.
+
+Auth prefers the user's OAuth credentials (the user owns the Sheet) when
+GOOGLE_OAUTH_* is set — a service account is fragile here (it can be deleted,
+giving 'invalid_grant: account not found', and has no Drive quota). Falls back
+to the service account when OAuth is not configured.
+"""
 import json
+import os
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -8,7 +15,19 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
 
 
 def open_sheet(sheet_id, sa_json):
-    creds = Credentials.from_service_account_info(json.loads(sa_json), scopes=SCOPES)
+    client_id = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
+    if client_id:
+        from google.oauth2.credentials import Credentials as UserCredentials
+        creds = UserCredentials(
+            None,
+            refresh_token=os.environ["GOOGLE_OAUTH_REFRESH_TOKEN"],
+            client_id=client_id,
+            client_secret=os.environ["GOOGLE_OAUTH_CLIENT_SECRET"],
+            token_uri="https://oauth2.googleapis.com/token",
+            scopes=["https://www.googleapis.com/auth/drive"],
+        )
+    else:
+        creds = Credentials.from_service_account_info(json.loads(sa_json), scopes=SCOPES)
     return gspread.authorize(creds).open_by_key(sheet_id)
 
 
