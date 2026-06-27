@@ -90,3 +90,25 @@ def write_form(sh, form_json, chunk=45000):
         ws = sh.add_worksheet(title="_form", rows=100, cols=1)
     pieces = [form_json[i:i + chunk] for i in range(0, len(form_json), chunk)] or [""]
     ws.update([["form_json"]] + [[p] for p in pieces], "A1", value_input_option="RAW")
+
+
+def write_data(sh, header, rows):
+    """Upsert the decoded 'data' tab by uuid; rows are never deleted. Uses
+    USER_ENTERED so =HYPERLINK photo cells render as live links."""
+    ws = _ws(sh, "data", header)
+    key_idx = header.index("uuid")
+    values = ws.get_all_values()
+    existing = {}
+    if len(values) > 1:
+        for i, r in enumerate(values[1:], start=2):
+            if key_idx < len(r) and r[key_idx]:
+                existing[r[key_idx]] = i
+    appends = []
+    for line in rows:
+        key = str(line[key_idx]) if key_idx < len(line) else ""
+        if key and key in existing:
+            ws.update([line], f"A{existing[key]}", value_input_option="USER_ENTERED")
+        else:
+            appends.append(line)
+    if appends:
+        ws.append_rows(appends, value_input_option="USER_ENTERED")

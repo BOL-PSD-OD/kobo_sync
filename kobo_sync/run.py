@@ -53,7 +53,7 @@ def main(argv=None):
         sa = os.environ.get("GOOGLE_SA_JSON", "")
         sh = sheets.open_sheet(s.sheet_id, sa)
         prior = sheets.read_prior_ids(sh)
-        uploaded_keys, _ = sheets.read_uploaded_media(sh)
+        uploaded_keys, _media_urls_prior = sheets.read_uploaded_media(sh)
 
     info = parse_form(form)
     items = build_items(records, info, prior_ids=prior)
@@ -68,8 +68,9 @@ def main(argv=None):
     if args.fake:
         print("FAKE mode: skipping Sheet/Drive writes and deletion.")
     else:
-        from kobo_sync import drive, kobo_api
+        from kobo_sync import drive, kobo_api, datatab
         # photos
+        new_urls = {}
         svc = drive.drive_client(sa) if s.drive_folder_id else None
         if svc:
             new_rows, new_urls, pending = drive.upload_photos(
@@ -81,6 +82,9 @@ def main(argv=None):
         sheets.upsert(sheets._ws(sh, "master", MASTER_HEADER), MASTER_HEADER, _master_rows(items), "uuid")
         sheets.upsert(sheets._ws(sh, "_raw", RAW_HEADER), RAW_HEADER, _raw_rows(items), "uuid")
         sheets.write_form(sh, json.dumps(form, ensure_ascii=False))
+        # decoded human-readable 'data' tab (links every photo already in Drive)
+        media_urls = {**_media_urls_prior, **new_urls}
+        sheets.write_data(sh, datatab.data_header(info), datatab.data_rows(items, info, media_urls))
         # archive (guarded; off by default)
         chosen = []
         if mode in ("dry_run", "delete"):
