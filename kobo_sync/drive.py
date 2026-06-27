@@ -23,10 +23,11 @@ def _folder(svc, parent_id, name, cache):
         return cache[name]
     q = (f"'{parent_id}' in parents and name='{name}' and "
          "mimeType='application/vnd.google-apps.folder' and trashed=false")
-    found = svc.files().list(q=q, fields="files(id)").execute().get("files", [])
+    found = svc.files().list(q=q, fields="files(id)", supportsAllDrives=True,
+                             includeItemsFromAllDrives=True).execute().get("files", [])
     fid = found[0]["id"] if found else svc.files().create(
         body={"name": name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]},
-        fields="id").execute()["id"]
+        fields="id", supportsAllDrives=True).execute()["id"]
     cache[name] = fid
     return fid
 
@@ -50,6 +51,7 @@ def upload_photos(svc, root_id, token, items, photo_fields, uploaded_keys, *, st
     new_rows, urls, pending = [], {}, set()
     cache = {}
     stopped = False
+    errs = []
     for it in items:
         rec = it["rec"]
         for f in photo_fields:
@@ -63,20 +65,30 @@ def upload_photos(svc, root_id, token, items, photo_fields, uploaded_keys, *, st
                 stopped = True
                 pending.add(key)
                 continue
-            att = _match_attachment(rec, f, val)
-            dl = att and (att.get("download_url") or att.get("download_large_url"))
-            data = download_attachment(token, dl) if dl else None
-            if not data:
+            # A Drive/quota/network error on one photo must NOT abort the whole
+            # sync: mark it pending (it retries next run) and keep going. Spec:
+            # "รูปอัปไม่สำเร็จ = mark ລໍຖ້າອັບໂຫລດ ไม่บล็อก".
+            try:
+                att = _match_attachment(rec, f, val)
+                dl = att and (att.get("download_url") or att.get("download_large_url"))
+                data = download_attachment(token, dl) if dl else None
+                if not data:
+                    pending.add(key)
+                    continue
+                ext = (str(val).rsplit(".", 1)[-1] or "jpg").lower()[:4]
+                fname = f"{PHOTO_STEM.get(f, f.lower())}.{ext}"
+                fid = _folder(svc, root_id, it["store_id"], cache)
+                media = MediaIoBaseUpload(io.BytesIO(data), mimetype="image/jpeg", resumable=False)
+                created = svc.files().create(
+                    body={"name": fname, "parents": [fid]},
+                    media_body=media, fields="id, webViewLink",
+                    supportsAllDrives=True).execute()
+                url = created.get("webViewLink", "")
+                urls[key] = url
+                new_rows.append([it["uuid"], f, it["store_id"], created["id"], url])
+            except Exception as e:   # noqa: BLE001 - keep the sync alive
                 pending.add(key)
-                continue
-            ext = (str(val).rsplit(".", 1)[-1] or "jpg").lower()[:4]
-            fname = f"{PHOTO_STEM.get(f, f.lower())}.{ext}"
-            fid = _folder(svc, root_id, it["store_id"], cache)
-            media = MediaIoBaseUpload(io.BytesIO(data), mimetype="image/jpeg", resumable=False)
-            created = svc.files().create(
-                body={"name": fname, "parents": [fid]},
-                media_body=media, fields="id, webViewLink").execute()
-            url = created.get("webViewLink", "")
-            urls[key] = url
-            new_rows.append([it["uuid"], f, it["store_id"], created["id"], url])
+                errs.append(str(e))
+    if errs:
+        print(f"photo upload: {len(errs)} failed, kept pending. first error: {errs[0][:240]}")
     return new_rows, urls, pending
