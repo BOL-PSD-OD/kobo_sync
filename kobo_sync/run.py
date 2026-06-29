@@ -68,7 +68,7 @@ def main(argv=None):
     if args.fake:
         print("FAKE mode: skipping Sheet/Drive writes and deletion.")
     else:
-        from kobo_sync import drive, kobo_api, datatab
+        from kobo_sync import drive, kobo_api, datatab, psp_export
         # photos
         new_urls = {}
         svc = drive.drive_client(sa) if s.drive_folder_id else None
@@ -85,6 +85,9 @@ def main(argv=None):
         # decoded human-readable 'data' tab (links every photo already in Drive)
         media_urls = {**_media_urls_prior, **new_urls}
         sheets.write_data(sh, datatab.data_header(info), datatab.data_rows(items, info, media_urls))
+        # psp_export tab: 18 cols ready to copy into the PSP follow-up form sheet
+        sheets.upsert(sheets._ws(sh, "psp_export", psp_export.PSP_HEADER),
+                      psp_export.PSP_HEADER, psp_export.psp_rows(items, info), "store_id")
         # archive (guarded; off by default)
         chosen = []
         if mode in ("dry_run", "delete"):
