@@ -19,16 +19,20 @@ LIST_FIELDS = {
     "network": "Network",
     "why": "why",
     "revenue": "profit",
+    "license": "License",          # business-registration question (2026-07 form)
 }
 REQUIRED = {"biz_type", "shop_name", "acquirer", "use_domestic", "interested"}
 
-# logical -> question name (text fields have no list to match on)
+# logical -> question name (text fields have no list to match on).
+# 2026-07 form inserts a `select_one License` question at S3.1_Q1, pushing these
+# five detail text fields down by one (district S3.1_Q1 -> S3.1_Q2, ... phone
+# S3.1_Q5 -> S3.1_Q6). Unmatched names resolve to None (see resolve_fields).
 TEXT_FIELDS = {
-    "district": "S3.1_Q1",
-    "village": "S3.1_Q2",
-    "owner_name": "S3.1_Q3",
-    "nationality": "S3.1_Q4",
-    "phone": "S3.1_Q5",
+    "district": "S3.1_Q2",
+    "village": "S3.1_Q3",
+    "owner_name": "S3.1_Q4",
+    "nationality": "S3.1_Q5",
+    "phone": "S3.1_Q6",
 }
 
 

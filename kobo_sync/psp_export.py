@@ -12,7 +12,7 @@ from kobo_sync.datatab import _decode_cell, _latlon
 
 PSP_HEADER = [
     "PSP", "store_id", "status", "biz_type", "shop_name", "district",
-    "village", "owner_name", "nationality", "phone", "why_not",
+    "village", "owner_name", "nationality", "phone", "why_not", "license",
     "lat", "lon", "Status After", "Take a Photo", "last_result",
     "saved_at", "saved_by",
 ]
@@ -51,6 +51,7 @@ def psp_rows(items, info):
             "nationality": _f(rec, info, "nationality"),
             "phone": _f(rec, info, "phone"),
             "why_not": _f(rec, info, "why"),            # reason for not using PSP
+            "license": _f(rec, info, "license"),        # ມີ/ບໍ່ມີ ໃບທະບຽນວິສາຫະກິດ
             "lat": lat,
             "lon": lon,
             "Status After": "",                         # filled by the form

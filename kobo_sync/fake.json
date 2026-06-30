@@ -7,8 +7,9 @@
         {"name": "S2_Q3", "type": "select_one learn", "label": ["2.3"], "select_from_list_name": "learn"},
         {"name": "S3_Q1", "type": "select_one biz_type", "label": ["3.1 ປະເພດ"], "select_from_list_name": "biz_type"},
         {"name": "S3_Q2", "type": "select_one shop_name", "label": ["3.2 ຊື່"], "select_from_list_name": "shop_name"},
-        {"name": "S3.1_Q1", "type": "text", "label": ["ເມືອງ"]},
-        {"name": "S3.1_Q2", "type": "text", "label": ["ບ້ານ"]},
+        {"name": "S3.1_Q1", "type": "select_one License", "label": ["ໃບທະບຽນ"], "select_from_list_name": "License"},
+        {"name": "S3.1_Q2", "type": "text", "label": ["ເມືອງ"]},
+        {"name": "S3.1_Q3", "type": "text", "label": ["ບ້ານ"]},
         {"name": "S3_Q4", "type": "select_multiple acquirer", "label": ["3.4"], "select_from_list_name": "acquirer"},
         {"name": "S3_Q6", "type": "select_multiple QR", "label": ["3.6"], "select_from_list_name": "QR"},
         {"name": "S3_Q7", "type": "select_multiple psp", "label": ["3.7"], "select_from_list_name": "psp"},
@@ -32,6 +33,8 @@
         {"list_name": "shop_name", "name": "H010", "label": ["ໂຮງແຮມ ສິບ"], "biz_type": "hotel"},
         {"list_name": "shop_name", "name": "G001", "label": ["ເຮືອນພັກ ໜຶ່ງ"], "biz_type": "guesthouse"},
         {"list_name": "shop_name", "name": "other_shop", "label": ["ອື່ນໆ"]},
+        {"list_name": "License", "name": "1", "label": ["ມີໃບທະບຽນວິສາຫະກິດ"]},
+        {"list_name": "License", "name": "0", "label": ["ບໍ່ມີໃບທະບຽນວິສາຫະກິດ"]},
         {"list_name": "acquirer", "name": "1", "label": ["ຮັບພາຍໃນ"]},
         {"list_name": "acquirer", "name": "2", "label": ["ຮັບຕ່າງປະເທດ"]},
         {"list_name": "acquirer", "name": "3", "label": ["ບໍ່ມີເຄື່ອງມື"]},
@@ -47,10 +50,10 @@
     }
   },
   "records": [
-    {"_id": 201, "_uuid": "u1", "_submission_time": "2026-06-27T12:36:39", "S3_Q1": "hotel", "S3_Q2": "H010", "S3.1_Q1": "ຫຼວງພະບາງ", "S3_Q4": "1 2", "S3_Q9": "1", "Front_Mer": "front_201.jpg", "geopoint": "19.885 102.135 300 5", "_attachments": [{"question_xpath": "Front_Mer", "download_url": "https://example/front_201.jpg", "filename": "front_201.jpg"}]},
-    {"_id": 202, "_uuid": "u2", "_submission_time": "2026-06-27T12:39:10", "S3_Q1": "restaurant", "S3_Q2": "other_shop", "S3_Q2_oth": "ຮ້ານ ກິນ", "S3.1_Q1": "ຫຼວງພະບາງ", "S3_Q4": "1 2", "S3_Q9": "0", "S3_Q12": "1"},
-    {"_id": 203, "_uuid": "u3", "_submission_time": "2026-06-27T12:40:24", "S3_Q1": "guesthouse", "S3_Q2": "other_shop", "S3_Q2_oth": "ເຮືອນພັກ ໃໝ່", "S3.1_Q1": "ຫຼວງພະບາງ", "S3_Q4": "2", "S3_Q9": "0", "S3_Q12": "0"},
-    {"_id": 204, "_uuid": "u4", "_submission_time": "2026-06-27T12:41:38", "S3_Q1": "pub", "S3_Q2": "other_shop", "S3_Q2_oth": "ພັບ ແສງ", "S3.1_Q1": "ຫຼວງພະບາງ", "S3_Q4": "3", "S3_Q12": "1"},
-    {"_id": 205, "_uuid": "u5", "_submission_time": "2026-06-27T12:43:39", "S3_Q1": "nightclub", "S3_Q2": "other_shop", "S3_Q2_oth": "ໄນຄຣັບ A", "S3.1_Q1": "ຫຼວງພະບາງ", "S3_Q4": "3", "S3_Q12": "0"}
+    {"_id": 201, "_uuid": "u1", "_submission_time": "2026-06-27T12:36:39", "S3_Q1": "hotel", "S3_Q2": "H010", "S3.1_Q1": "1", "S3.1_Q2": "ຫຼວງພະບາງ", "S3_Q4": "1 2", "S3_Q9": "1", "Front_Mer": "front_201.jpg", "geopoint": "19.885 102.135 300 5", "_attachments": [{"question_xpath": "Front_Mer", "download_url": "https://example/front_201.jpg", "filename": "front_201.jpg"}]},
+    {"_id": 202, "_uuid": "u2", "_submission_time": "2026-06-27T12:39:10", "S3_Q1": "restaurant", "S3_Q2": "other_shop", "S3_Q2_oth": "ຮ້ານ ກິນ", "S3.1_Q2": "ຫຼວງພະບາງ", "S3_Q4": "1 2", "S3_Q9": "0", "S3_Q12": "1"},
+    {"_id": 203, "_uuid": "u3", "_submission_time": "2026-06-27T12:40:24", "S3_Q1": "guesthouse", "S3_Q2": "other_shop", "S3_Q2_oth": "ເຮືອນພັກ ໃໝ່", "S3.1_Q2": "ຫຼວງພະບາງ", "S3_Q4": "2", "S3_Q9": "0", "S3_Q12": "0"},
+    {"_id": 204, "_uuid": "u4", "_submission_time": "2026-06-27T12:41:38", "S3_Q1": "pub", "S3_Q2": "other_shop", "S3_Q2_oth": "ພັບ ແສງ", "S3.1_Q2": "ຫຼວງພະບາງ", "S3_Q4": "3", "S3_Q12": "1"},
+    {"_id": 205, "_uuid": "u5", "_submission_time": "2026-06-27T12:43:39", "S3_Q1": "nightclub", "S3_Q2": "other_shop", "S3_Q2_oth": "ໄນຄຣັບ A", "S3.1_Q2": "ຫຼວງພະບາງ", "S3_Q4": "3", "S3_Q12": "0"}
   ]
 }
