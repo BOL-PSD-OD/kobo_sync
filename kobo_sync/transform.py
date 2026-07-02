@@ -102,7 +102,11 @@ def build_items(records, info: FormInfo, prior_ids=None):
     items = []
     for raw in records:
         rec = _norm(raw)
-        uuid = _fmt(rec.get("_uuid")) or _fmt(rec.get("_id"))
+        # Key rows by the STABLE kobocat _id, not _uuid. Kobo changes _uuid every
+        # time a submission is EDITED (it is the ODK instanceID; meta/rootUuid is
+        # the stable original). Keying by _uuid would make an edited submission
+        # append a NEW Sheet row instead of updating in place. _id never changes.
+        uuid = _fmt(rec.get("_id")) or _fmt(rec.get("_uuid"))
         code = _fmt(rec.get(f["shop_name"]))
         is_catalog = bool(code) and code != "other_shop"
         biz = _fmt(rec.get(f["biz_type"])) or ""

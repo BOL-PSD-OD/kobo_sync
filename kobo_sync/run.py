@@ -52,6 +52,11 @@ def main(argv=None):
         records = kobo_api.fetch_submissions(s)
         sa = os.environ.get("GOOGLE_SA_JSON", "")
         sh = sheets.open_sheet(s.sheet_id, sa)
+        # One-time edit-safety: re-key derived tabs from _uuid -> stable _id (Kobo
+        # changes _uuid on edit). Non-destructive + idempotent (no-op once migrated).
+        rekeyed = sheets.migrate_uuid_to_id(sh)
+        if rekeyed:
+            print(f"re-keyed {rekeyed} cells from _uuid -> _id (edit-safe upserts)")
         prior = sheets.read_prior_ids(sh)
         uploaded_keys, _media_urls_prior = sheets.read_uploaded_media(sh)
 

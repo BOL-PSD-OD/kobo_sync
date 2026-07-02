@@ -85,6 +85,67 @@ def upsert(ws, header, rows, key_col):
         ws.append_rows(appends, value_input_option="RAW")
 
 
+def uuid_to_id_map(raw_records):
+    """{_uuid: _id} built from '_raw' rows (each has a full-record 'raw_json').
+    Pure (no I/O) so it is unit-testable."""
+    out = {}
+    for r in raw_records:
+        rj = r.get("raw_json")
+        if not rj:
+            continue
+        try:
+            rec = json.loads(rj)
+        except (ValueError, TypeError):
+            continue
+        u, i = rec.get("_uuid"), rec.get("_id")
+        if u is not None and i is not None:
+            out[str(u)] = str(i)
+    return out
+
+
+def remap_updates(values, key_idx, u2id):
+    """[(row_number, new_id)] for rows whose key-column value is an old _uuid found
+    in `u2id`. Pure. `values` includes the header row; row numbers are 1-based."""
+    updates = []
+    for rownum, row in enumerate(values[1:], start=2):
+        if key_idx < len(row):
+            old = row[key_idx]
+            if old and old in u2id:
+                updates.append((rownum, u2id[old]))
+    return updates
+
+
+def migrate_uuid_to_id(sh):
+    """One-time, NON-DESTRUCTIVE re-key of the derived tabs from the ODK `_uuid`
+    (which Kobo changes every time a submission is EDITED) to the stable `_id`.
+    Rewrites ONLY the 'uuid' key column of master/_raw/data/_media — store_ids,
+    photos and raw_json are preserved, so editing a submission later updates the
+    existing row instead of appending a duplicate. Idempotent (no-op once re-keyed)."""
+    try:
+        raw_records = sh.worksheet("_raw").get_all_records()
+    except gspread.WorksheetNotFound:
+        return 0
+    u2id = uuid_to_id_map(raw_records)
+    if not u2id:
+        return 0
+    total = 0
+    for title in ("master", "_raw", "data", "_media"):
+        try:
+            ws = sh.worksheet(title)
+        except gspread.WorksheetNotFound:
+            continue
+        values = ws.get_all_values()
+        if len(values) < 2 or "uuid" not in values[0]:
+            continue
+        ki = values[0].index("uuid")
+        ups = remap_updates(values, ki, u2id)
+        if ups:
+            ws.update_cells([gspread.Cell(rn, ki + 1, val) for rn, val in ups],
+                            value_input_option="RAW")
+            total += len(ups)
+    return total
+
+
 def write_status(sh, header, row):
     ws = _ws(sh, "_status", header)
     ws.update([[row.get(h, "") for h in header]], "2:2")
