@@ -65,7 +65,9 @@ def read_uploaded_media(sh):
 
 
 def upsert(ws, header, rows, key_col):
-    """Upsert `rows` (list of dicts) into `ws` matched on `key_col`; never deletes."""
+    """Upsert `rows` (list of dicts) into `ws` matched on `key_col`; never deletes.
+    ALL row updates go in ONE batch_update call (not one API write per row) to stay
+    well under the Sheets ~60 writes/min/user quota."""
     existing = {}
     values = ws.get_all_values()
     if len(values) > 1:
@@ -73,14 +75,16 @@ def upsert(ws, header, rows, key_col):
         for i, r in enumerate(values[1:], start=2):
             if idx < len(r) and r[idx]:
                 existing[r[idx]] = i
-    appends = []
+    appends, updates = [], []
     for row in rows:
         line = [row.get(h, "") for h in header]
         key = str(row.get(key_col, ""))
         if key and key in existing:
-            ws.update([line], f"A{existing[key]}")
+            updates.append({"range": f"A{existing[key]}", "values": [line]})
         else:
             appends.append(line)
+    if updates:
+        ws.batch_update(updates, value_input_option="RAW")
     if appends:
         ws.append_rows(appends, value_input_option="RAW")
 
@@ -183,12 +187,14 @@ def write_data(sh, header, rows):
         for i, r in enumerate(values[1:], start=2):
             if key_idx < len(r) and r[key_idx]:
                 existing[r[key_idx]] = i
-    appends = []
+    appends, updates = [], []
     for line in rows:
         key = str(line[key_idx]) if key_idx < len(line) else ""
         if key and key in existing:
-            ws.update([line], f"A{existing[key]}", value_input_option="USER_ENTERED")
+            updates.append({"range": f"A{existing[key]}", "values": [line]})
         else:
             appends.append(line)
+    if updates:
+        ws.batch_update(updates, value_input_option="USER_ENTERED")
     if appends:
         ws.append_rows(appends, value_input_option="USER_ENTERED")
